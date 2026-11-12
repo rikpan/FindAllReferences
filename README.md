@@ -57,4 +57,4 @@ npm test
 npm run package
 ```
 
-`npm test` compiles and runs three test suites: pure functions on the extension side (kinds, symbol chains, project mapping), the view model (scope, filtering, sorting, grouping, copying), and a webview smoke test in jsdom. `npm run package` produces `find-all-references-<version>.vsix`, which you can install in VS Code with **Install from VSIX**.
+`npm test` compiles and runs three test suites: pure functions on the extension side (kinds, symbol chains, project mapping), the view model (scope, filtering, sorting, grouping, copying), and a webview smoke test in jsdom. `npm run package` produces `vs-find-all-references-<version>.vsix`, which you can install in VS Code with **Install from VSIX**.

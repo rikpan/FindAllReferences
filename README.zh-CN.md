@@ -57,4 +57,4 @@ npm test
 npm run package
 ```
 
-`npm test` 编译后跑三组测试：扩展端纯函数（类别、符号链、工程映射）、视图模型（范围、筛选、排序、分组、复制）、jsdom 里的 Webview 冒烟。`npm run package` 生成 `find-all-references-<版本>.vsix`，在 VS Code 里用「从 VSIX 安装」装上即可。
+`npm test` 编译后跑三组测试：扩展端纯函数（类别、符号链、工程映射）、视图模型（范围、筛选、排序、分组、复制）、jsdom 里的 Webview 冒烟。`npm run package` 生成 `vs-find-all-references-<版本>.vsix`，在 VS Code 里用「从 VSIX 安装」装上即可。
