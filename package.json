@@ -2,7 +2,7 @@
     "name": "vs-find-all-references",
     "displayName": "FindAllReferences",
     "description": "%description%",
-    "version": "0.1.0",
+    "version": "1.0.2",
     "publisher": "rikpan",
     "license": "MIT",
     "icon": "media/icon.png",
