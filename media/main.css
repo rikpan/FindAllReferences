@@ -1,0 +1,653 @@
+/* 结果窗口样式：颜色全部取自 VS Code 主题变量。 */
+
+html,
+body
+{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body
+{
+    display: flex;
+    flex-direction: column;
+    color: var(--vscode-foreground);
+    background: var(--vscode-panel-background, var(--vscode-editor-background));
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    user-select: none;
+}
+
+body.resizing
+{
+    cursor: col-resize;
+}
+
+.hidden
+{
+    display: none !important;
+}
+
+/* ---------- 工具栏 ---------- */
+
+.toolbar
+{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 6px;
+    flex: none;
+    border-bottom: 1px solid var(--vscode-panel-border, transparent);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.toolbar select
+{
+    height: 22px;
+    color: var(--vscode-dropdown-foreground);
+    background: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-dropdown-border, transparent);
+    border-radius: 2px;
+    font: inherit;
+    outline: none;
+}
+
+.toolbar select:focus
+{
+    border-color: var(--vscode-focusBorder);
+}
+
+#scope
+{
+    width: 150px;
+    margin-right: 4px;
+}
+
+#groupBy
+{
+    width: 190px;
+}
+
+.toolbar button
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 4px;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.toolbar button.icon
+{
+    width: 24px;
+    justify-content: center;
+    padding: 0;
+}
+
+.toolbar button:hover:not(:disabled)
+{
+    background: var(--vscode-toolbar-hoverBackground);
+}
+
+.toolbar button:disabled
+{
+    opacity: 0.4;
+    cursor: default;
+}
+
+.toolbar button.checked
+{
+    background: var(--vscode-inputOption-activeBackground);
+    border-color: var(--vscode-inputOption-activeBorder, transparent);
+    color: var(--vscode-inputOption-activeForeground, inherit);
+}
+
+#clearFilters.active
+{
+    color: var(--vscode-errorForeground);
+}
+
+.toolbar .label
+{
+    padding: 0 4px 0 2px;
+}
+
+.toolbar .separator
+{
+    width: 1px;
+    height: 16px;
+    margin: 0 4px;
+    background: var(--vscode-panel-border, var(--vscode-widget-border, #8884));
+}
+
+.toolbar .spacer
+{
+    flex: 1;
+    min-width: 8px;
+}
+
+.search
+{
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 1 260px;
+    min-width: 120px;
+}
+
+.search input
+{
+    width: 100%;
+    height: 22px;
+    box-sizing: border-box;
+    padding: 0 24px 0 6px;
+    color: var(--vscode-input-foreground);
+    background: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 2px;
+    font: inherit;
+    outline: none;
+}
+
+.search input:focus
+{
+    border-color: var(--vscode-focusBorder);
+}
+
+.search .codicon
+{
+    position: absolute;
+    right: 5px;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* ---------- 页签与状态 ---------- */
+
+.tabs
+{
+    display: flex;
+    flex: none;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--vscode-panel-border, transparent);
+}
+
+.tab
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 320px;
+    padding: 3px 6px 3px 10px;
+    cursor: pointer;
+    color: var(--vscode-tab-inactiveForeground);
+    background: var(--vscode-tab-inactiveBackground);
+    border-right: 1px solid var(--vscode-tab-border, transparent);
+}
+
+.tab.active
+{
+    color: var(--vscode-tab-activeForeground);
+    background: var(--vscode-tab-activeBackground);
+    box-shadow: inset 0 -2px 0 var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
+}
+
+.tab-title
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tab-close
+{
+    border-radius: 3px;
+    opacity: 0.6;
+}
+
+.tab-close:hover
+{
+    opacity: 1;
+    background: var(--vscode-toolbar-hoverBackground);
+}
+
+.status
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 2px 8px;
+    color: var(--vscode-descriptionForeground);
+}
+
+/* ---------- 表格 ---------- */
+
+.scroller
+{
+    position: relative;
+    flex: 1;
+    overflow: auto;
+    outline: none;
+}
+
+table
+{
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th
+{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 22px;
+    padding: 0;
+    text-align: left;
+    font-weight: normal;
+    background: var(--vscode-panel-background, var(--vscode-editor-background));
+    border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, #8884));
+    cursor: default;
+}
+
+th:hover
+{
+    background: var(--vscode-list-hoverBackground);
+}
+
+.th
+{
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+    padding: 0 6px;
+    overflow: hidden;
+    border-left: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, #8884));
+}
+
+th:first-child .th
+{
+    border-left: none;
+    padding-left: 26px;
+}
+
+.th-title
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.th .sort
+{
+    font-size: 12px;
+}
+
+.th-filter
+{
+    visibility: hidden;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+th:hover .th-filter,
+.th-filter.active
+{
+    visibility: visible;
+}
+
+.th-filter.active
+{
+    color: var(--vscode-textLink-foreground);
+}
+
+.th-filter:hover
+{
+    background: var(--vscode-toolbar-hoverBackground);
+}
+
+.resizer
+{
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    z-index: 2;
+    cursor: col-resize;
+}
+
+tr.row
+{
+    height: 22px;
+}
+
+tr.row td
+{
+    height: 22px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 22px;
+}
+
+tr.spacer td
+{
+    padding: 0;
+}
+
+td.num,
+th.num .th-title
+{
+    text-align: right;
+}
+
+tr.row:hover td
+{
+    background: var(--vscode-list-hoverBackground);
+}
+
+tr.row.selected td
+{
+    color: var(--vscode-list-inactiveSelectionForeground, inherit);
+    background: var(--vscode-list-inactiveSelectionBackground);
+}
+
+.scroller:focus-within tr.row.selected td
+{
+    color: var(--vscode-list-activeSelectionForeground);
+    background: var(--vscode-list-activeSelectionBackground);
+}
+
+.scroller:focus tr.row.focused td:first-child
+{
+    box-shadow: inset 1px 0 0 var(--vscode-list-focusOutline, var(--vscode-focusBorder));
+}
+
+.scroller:focus tr.row.focused td
+{
+    box-shadow: inset 0 1px 0 var(--vscode-list-focusOutline, var(--vscode-focusBorder)),
+                inset 0 -1px 0 var(--vscode-list-focusOutline, var(--vscode-focusBorder));
+}
+
+td.c-code
+{
+    padding-left: 0 !important;
+}
+
+.code
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+}
+
+td.c-code.definition .code
+{
+    font-weight: bold;
+}
+
+.code .match
+{
+    color: var(--vscode-editor-foreground);
+    background: var(--vscode-editor-findMatchHighlightBackground);
+    outline: 1px solid var(--vscode-editor-findMatchHighlightBorder, transparent);
+    border-radius: 1px;
+}
+
+tr.row.selected .code .match
+{
+    color: inherit;
+}
+
+tr.group td
+{
+    padding: 0;
+    overflow: visible;
+}
+
+.group-cell
+{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.twistie
+{
+    width: 16px;
+    flex: none;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.group-icon
+{
+    flex: none;
+    color: var(--vscode-symbolIcon-classForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-struct
+{
+    color: var(--vscode-symbolIcon-structForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-method,
+.group-icon.codicon-symbol-function,
+.group-icon.codicon-symbol-constructor
+{
+    color: var(--vscode-symbolIcon-methodForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-field,
+.group-icon.codicon-symbol-variable
+{
+    color: var(--vscode-symbolIcon-fieldForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-property
+{
+    color: var(--vscode-symbolIcon-propertyForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-interface
+{
+    color: var(--vscode-symbolIcon-interfaceForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-symbol-enum,
+.group-icon.codicon-symbol-enum-member
+{
+    color: var(--vscode-symbolIcon-enumeratorForeground, var(--vscode-foreground));
+}
+
+.group-icon.codicon-file,
+.group-icon.codicon-symbol-misc
+{
+    color: inherit;
+}
+
+.group-count
+{
+    font-weight: bold;
+}
+
+.empty
+{
+    padding: 12px 16px;
+    color: var(--vscode-descriptionForeground);
+}
+
+/* ---------- 浮层：列筛选与右键菜单 ---------- */
+
+.popup,
+.menu
+{
+    position: fixed;
+    z-index: 10;
+    color: var(--vscode-menu-foreground, var(--vscode-foreground));
+    background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+    border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border, #8886));
+    border-radius: 4px;
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, #0006);
+}
+
+.popup
+{
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    max-height: 360px;
+    padding: 6px;
+    gap: 6px;
+}
+
+.popup-search input
+{
+    width: 100%;
+    box-sizing: border-box;
+    height: 22px;
+    padding: 0 6px;
+    color: var(--vscode-input-foreground);
+    background: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 2px;
+    font: inherit;
+    outline: none;
+}
+
+.popup-search input:focus
+{
+    border-color: var(--vscode-focusBorder);
+}
+
+.popup-list
+{
+    flex: 1;
+    overflow-y: auto;
+    min-height: 40px;
+}
+
+.popup-item
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 4px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.popup-item:hover
+{
+    background: var(--vscode-list-hoverBackground);
+}
+
+.popup-value
+{
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.popup-count
+{
+    color: var(--vscode-descriptionForeground);
+}
+
+.popup-buttons
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.popup-buttons button
+{
+    min-width: 64px;
+    height: 24px;
+    color: var(--vscode-button-secondaryForeground);
+    background: var(--vscode-button-secondaryBackground);
+    border: none;
+    border-radius: 2px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.popup-buttons button.primary
+{
+    color: var(--vscode-button-foreground);
+    background: var(--vscode-button-background);
+}
+
+.menu
+{
+    min-width: 180px;
+    padding: 4px 0;
+}
+
+.menu-item
+{
+    display: flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 12px 0 4px;
+    cursor: pointer;
+}
+
+.menu-item:hover:not(.disabled)
+{
+    color: var(--vscode-menu-selectionForeground, inherit);
+    background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground));
+}
+
+.menu-item.disabled
+{
+    opacity: 0.5;
+    cursor: default;
+}
+
+.menu-check
+{
+    width: 20px;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.menu-label
+{
+    flex: 1;
+}
+
+.menu-key
+{
+    padding-left: 24px;
+    opacity: 0.7;
+}
+
+.menu-separator
+{
+    height: 1px;
+    margin: 4px 0;
+    background: var(--vscode-menu-separatorBackground, var(--vscode-widget-border, #8884));
+}

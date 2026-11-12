@@ -1,0 +1,180 @@
+{
+    "name": "find-all-references",
+    "displayName": "FindAllReferences",
+    "description": "%description%",
+    "version": "0.1.0",
+    "publisher": "rikpan",
+    "license": "MIT",
+    "icon": "media/icon.png",
+    "galleryBanner": {
+        "color": "#1f5fd1",
+        "theme": "dark"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rikpan/FindAllReferences.git"
+    },
+    "bugs": {
+        "url": "https://github.com/rikpan/FindAllReferences/issues"
+    },
+    "homepage": "https://github.com/rikpan/FindAllReferences#readme",
+    "engines": {
+        "vscode": "^1.90.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Other"
+    ],
+    "keywords": [
+        "references",
+        "find all references",
+        "visual studio",
+        "查找所有引用",
+        "csharp",
+        "unity"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/src/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "findAllReferences.findAllReferences",
+                "title": "%command.findAllReferences.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "findAllReferences.nextReference",
+                "title": "%command.nextReference.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "findAllReferences.previousReference",
+                "title": "%command.previousReference.title%",
+                "category": "%command.category%"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "findAllReferences.findAllReferences",
+                    "when": "editorHasReferenceProvider",
+                    "group": "navigation@1.5"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "findAllReferences.findAllReferences",
+                    "when": "editorHasReferenceProvider"
+                },
+                {
+                    "command": "findAllReferences.nextReference",
+                    "when": "findAllReferences.hasResults"
+                },
+                {
+                    "command": "findAllReferences.previousReference",
+                    "when": "findAllReferences.hasResults"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "findAllReferences.findAllReferences",
+                "key": "shift+f12",
+                "when": "config.findAllReferences.useShiftF12 && editorHasReferenceProvider && editorTextFocus && !isInEmbeddedEditor"
+            },
+            {
+                "command": "findAllReferences.nextReference",
+                "key": "f4",
+                "when": "config.findAllReferences.useF4Navigation && findAllReferences.hasResults"
+            },
+            {
+                "command": "findAllReferences.previousReference",
+                "key": "shift+f4",
+                "when": "config.findAllReferences.useF4Navigation && findAllReferences.hasResults"
+            }
+        ],
+        "configuration": {
+            "title": "FindAllReferences",
+            "properties": {
+                "findAllReferences.language": {
+                    "type": "string",
+                    "enum": [
+                        "auto",
+                        "zh-cn",
+                        "en"
+                    ],
+                    "enumDescriptions": [
+                        "%config.language.auto%",
+                        "%config.language.zh-cn%",
+                        "%config.language.en%"
+                    ],
+                    "default": "auto",
+                    "order": 0,
+                    "description": "%config.language%"
+                },
+                "findAllReferences.useShiftF12": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%config.useShiftF12%"
+                },
+                "findAllReferences.useF4Navigation": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%config.useF4Navigation%"
+                }
+            }
+        },
+        "viewsContainers": {
+            "panel": [
+                {
+                    "id": "findAllReferences",
+                    "title": "查找所有引用",
+                    "icon": "media/icon.svg"
+                },
+                {
+                    "id": "findAllReferencesEn",
+                    "title": "Find All References",
+                    "icon": "media/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "findAllReferences": [
+                {
+                    "type": "webview",
+                    "id": "findAllReferences.results",
+                    "name": "查找所有引用",
+                    "when": "findAllReferences.locale == 'zh-cn' || !findAllReferences.locale && config.findAllReferences.language != 'en'"
+                }
+            ],
+            "findAllReferencesEn": [
+                {
+                    "type": "webview",
+                    "id": "findAllReferences.resultsEn",
+                    "name": "Find All References",
+                    "when": "findAllReferences.locale == 'en' || !findAllReferences.locale && config.findAllReferences.language == 'en'"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "compile": "node scripts/copy-codicons.js && tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+        "vscode:prepublish": "npm run compile",
+        "package": "vsce package --no-dependencies",
+        "publish": "vsce publish --no-dependencies",
+        "icon": "node scripts/make-icon.js"
+    },
+    "devDependencies": {
+        "@types/jsdom": "^21.1.7",
+        "@types/node": "^20.17.0",
+        "@types/vscode": "~1.90.0",
+        "@vscode/codicons": "^0.0.36",
+        "@vscode/vsce": "^3.2.0",
+        "jsdom": "^25.0.1",
+        "typescript": "^5.6.0"
+    }
+}

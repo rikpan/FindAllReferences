@@ -1,0 +1,13 @@
+{
+    "description": "仿 Visual Studio「查找所有引用」窗口：按项目／定义分组、代码／文件／行／列／项目／包含成员／包含类型／类别／存储库多列表格、范围筛选、列筛选、排序、保留结果、列表视图。",
+    "command.findAllReferences.title": "查找所有引用（VS 风格）",
+    "command.category": "引用",
+    "command.nextReference.title": "转到下一个引用",
+    "command.previousReference.title": "转到上一个引用",
+    "config.language.auto": "跟随 VS Code 的显示语言（中文界面用中文，其他用英文）。",
+    "config.language.zh-cn": "中文",
+    "config.language.en": "英文",
+    "config.language": "「查找所有引用」窗口及提示消息使用的语言。命令名与设置页面始终跟随 VS Code 的显示语言。",
+    "config.useShiftF12": "用 Shift+F12 打开 VS 风格的查找所有引用（覆盖内置的「查看引用」）。",
+    "config.useF4Navigation": "有结果时用 F4／Shift+F4 在引用间前后跳转。"
+}

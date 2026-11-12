@@ -1,0 +1,13 @@
+{
+    "description": "Recreates the Visual Studio \"Find All References\" window: grouping by project/definition, a multi-column table (Code, File, Line, Column, Project, Containing Member, Containing Type, Kind, Repository), scope and column filters, sorting, kept results and list view.",
+    "command.findAllReferences.title": "Find All References (VS Style)",
+    "command.category": "References",
+    "command.nextReference.title": "Go to Next Reference",
+    "command.previousReference.title": "Go to Previous Reference",
+    "config.language.auto": "Follow the VS Code display language (Chinese when VS Code is in Chinese, English otherwise).",
+    "config.language.zh-cn": "Chinese (Simplified)",
+    "config.language.en": "English",
+    "config.language": "Language of the Find All References window and its messages. Command names and this settings page always follow the VS Code display language.",
+    "config.useShiftF12": "Open the VS-style Find All References with Shift+F12 (replaces the built-in \"Peek References\").",
+    "config.useF4Navigation": "Use F4 / Shift+F4 to move to the next / previous reference while results are shown."
+}
