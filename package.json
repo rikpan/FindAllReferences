@@ -2,7 +2,7 @@
     "name": "vs-find-all-references",
     "displayName": "FindAllReferences",
     "description": "%description%",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "publisher": "rikpan",
     "license": "MIT",
     "icon": "media/icon.png",
@@ -31,7 +31,9 @@
         "visual studio",
         "查找所有引用",
         "csharp",
-        "unity"
+        "unity",
+        "find in files",
+        "查找"
     ],
     "activationEvents": [
         "onStartupFinished"
@@ -42,6 +44,11 @@
             {
                 "command": "findAllReferences.findAllReferences",
                 "title": "%command.findAllReferences.title%",
+                "category": "%command.category%"
+            },
+            {
+                "command": "findAllReferences.findInFiles",
+                "title": "%command.findInFiles.title%",
                 "category": "%command.category%"
             },
             {
@@ -69,12 +76,15 @@
                     "when": "editorHasReferenceProvider"
                 },
                 {
+                    "command": "findAllReferences.findInFiles"
+                },
+                {
                     "command": "findAllReferences.nextReference",
-                    "when": "findAllReferences.hasResults"
+                    "when": "findAllReferences.hasResults || findAllReferences.hasFindResults"
                 },
                 {
                     "command": "findAllReferences.previousReference",
-                    "when": "findAllReferences.hasResults"
+                    "when": "findAllReferences.hasResults || findAllReferences.hasFindResults"
                 }
             ]
         },
@@ -85,14 +95,29 @@
                 "when": "config.findAllReferences.useShiftF12 && editorHasReferenceProvider && editorTextFocus && !isInEmbeddedEditor"
             },
             {
+                "command": "findAllReferences.findInFiles",
+                "key": "ctrl+shift+f",
+                "mac": "cmd+shift+f",
+                "when": "config.findAllReferences.useCtrlShiftF && !(focusedView == 'findAllReferences.find' || focusedView == 'findAllReferences.findEn')"
+            },
+            {
+                "command": "findAllReferences.findInFiles",
+                "key": "ctrl+shift+f",
+                "mac": "cmd+shift+f",
+                "args": {
+                    "seed": false
+                },
+                "when": "config.findAllReferences.useCtrlShiftF && (focusedView == 'findAllReferences.find' || focusedView == 'findAllReferences.findEn')"
+            },
+            {
                 "command": "findAllReferences.nextReference",
                 "key": "f4",
-                "when": "config.findAllReferences.useF4Navigation && findAllReferences.hasResults"
+                "when": "config.findAllReferences.useF4Navigation && (findAllReferences.hasResults || findAllReferences.hasFindResults)"
             },
             {
                 "command": "findAllReferences.previousReference",
                 "key": "shift+f4",
-                "when": "config.findAllReferences.useF4Navigation && findAllReferences.hasResults"
+                "when": "config.findAllReferences.useF4Navigation && (findAllReferences.hasResults || findAllReferences.hasFindResults)"
             }
         ],
         "configuration": {
@@ -119,6 +144,11 @@
                     "default": true,
                     "description": "%config.useShiftF12%"
                 },
+                "findAllReferences.useCtrlShiftF": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%config.useCtrlShiftF%"
+                },
                 "findAllReferences.useF4Navigation": {
                     "type": "boolean",
                     "default": true,
@@ -137,6 +167,16 @@
                     "id": "findAllReferencesEn",
                     "title": "Find All References",
                     "icon": "media/icon.svg"
+                },
+                {
+                    "id": "findAllReferencesFind",
+                    "title": "查找结果",
+                    "icon": "media/icon.svg"
+                },
+                {
+                    "id": "findAllReferencesFindEn",
+                    "title": "Find Results",
+                    "icon": "media/icon.svg"
                 }
             ]
         },
@@ -154,6 +194,22 @@
                     "type": "webview",
                     "id": "findAllReferences.resultsEn",
                     "name": "Find All References",
+                    "when": "findAllReferences.locale == 'en' || !findAllReferences.locale && config.findAllReferences.language == 'en'"
+                }
+            ],
+            "findAllReferencesFind": [
+                {
+                    "type": "webview",
+                    "id": "findAllReferences.find",
+                    "name": "查找结果",
+                    "when": "findAllReferences.locale == 'zh-cn' || !findAllReferences.locale && config.findAllReferences.language != 'en'"
+                }
+            ],
+            "findAllReferencesFindEn": [
+                {
+                    "type": "webview",
+                    "id": "findAllReferences.findEn",
+                    "name": "Find Results",
                     "when": "findAllReferences.locale == 'en' || !findAllReferences.locale && config.findAllReferences.language == 'en'"
                 }
             ]

@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-仿 Visual Studio「查找所有引用」窗口的 VS Code 扩展。引用位置来自当前语言服务（C# 用 C# Dev Kit／C# 扩展，其他语言同理），结果显示在面板里的「查找所有引用」页签中。
+仿 Visual Studio「查找所有引用」与「查找结果」窗口的 VS Code 扩展。引用位置来自当前语言服务（C# 用 C# Dev Kit／C# 扩展，其他语言同理），结果显示在面板里的「查找所有引用」页签中；在文件中查找的结果显示在「查找结果」页签中。
 
 ![查找所有引用窗口](docs/screenshot.png)
 
@@ -10,7 +10,27 @@
 
 - 光标放在符号上，按 **Shift+F12**，或在编辑器右键菜单选「查找所有引用（VS 风格）」。
 - 有结果时 **F4／Shift+F4** 在引用间前后跳转（折叠的组会自动展开）。
-- 两个快捷键都可在设置里关掉：`findAllReferences.useShiftF12`、`findAllReferences.useF4Navigation`。
+- 按 **Ctrl+Shift+F**（macOS 为 **Cmd+Shift+F**，与 VS Code 相同）在文件中查找，结果显示在 VS 风格的「查找结果」窗口，详见下文。
+- **F4／Shift+F4** 作用于最近使用的窗口（查找所有引用或查找结果）。
+- 快捷键都可在设置里关掉：`findAllReferences.useShiftF12`、`findAllReferences.useCtrlShiftF`、`findAllReferences.useF4Navigation`。
+
+## 在文件中查找（查找结果窗口）
+
+按 Ctrl+Shift+F 时，窗口上方出现查找表单，查找框里预先填入编辑器中选中的文本（没有选中时用光标处的单词），与 VS Code 一致。按 Enter 或「全部查找」开始查找。
+
+| 快捷键 | 作用 |
+| --- | --- |
+| Ctrl+Shift+F（macOS Cmd+Shift+F） | 打开查找表单 |
+| Enter | 全部查找 |
+| Alt+C／Alt+W／Alt+R | 区分大小写／全字匹配／正则表达式 |
+| ↑／↓（在查找框中） | 浏览查找历史 |
+| Esc | 收起查找表单 |
+| Alt+M | 修改查找：用当前页签的条件打开表单，结果替换当前页签 |
+| F4／Shift+F4 | 下一个／上一个结果 |
+
+- **查找范围**：整个工作区、所有打开的文档、当前文档、当前文档所在文件夹；可填「包含的文件」「排除的文件」（逗号分隔的 glob，写法同 VS Code 搜索视图，如 `*.cs, Assets/Scripts`）；「使用排除设置和忽略文件」开启时遵循 `files.exclude`、`search.exclude` 与 `.gitignore`。
+- **结果窗口**：同一行多处匹配合并成一行并全部高亮；默认按「路径，然后是文件」逐级分组（另有「项目，然后是文件」「项目、路径，然后是文件」「仅文件」）；上方描述行列出查找条件，底部显示匹配行、匹配文件与搜索的文件总数；工具栏有停止查找、刷新、修改查找(M)，其余功能（范围筛选、列筛选、排序、保留结果、列表视图、搜索、复制、键盘）与「查找所有引用」窗口相同。
+- **实现**：用 VS Code 自带的 ripgrep，速度与内置搜索相当；未保存的文档按编辑器里的内容查找。结果超过 `search.maxResults`（默认 20000 行）时截断并提示。
 
 ## 语言
 
@@ -57,4 +77,4 @@ npm test
 npm run package
 ```
 
-`npm test` 编译后跑三组测试：扩展端纯函数（类别、符号链、工程映射）、视图模型（范围、筛选、排序、分组、复制）、jsdom 里的 Webview 冒烟。`npm run package` 生成 `vs-find-all-references-<版本>.vsix`，在 VS Code 里用「从 VSIX 安装」装上即可。
+`npm test` 编译后跑这几组测试：扩展端纯函数（类别、符号链、工程映射、查找条件与 ripgrep 解析）、视图模型（范围、筛选、排序、分组、复制）、jsdom 里两个窗口的 Webview 冒烟。本机有 ripgrep（在 PATH 里或用环境变量 `RG_PATH` 指定）时还会跑一次真实搜索。`npm run package` 生成 `vs-find-all-references-<版本>.vsix`，在 VS Code 里用「从 VSIX 安装」装上即可。

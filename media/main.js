@@ -6,9 +6,17 @@
 
     // @ts-ignore 由 Webview 注入
     const vscode = acquireVsCodeApi();
-    // @ts-ignore 由 viewModel.js 挂载
-    const VM = window.ReferencesViewModel;
+    // 同一份脚本服务两个窗口：body 的 data-view 为 find 时是「查找结果」，否则是「查找所有引用」
+    const isFind = document.body.getAttribute('data-view') === 'find';
+    // @ts-ignore 由 viewModel.js／findViewModel.js 挂载
+    const VM = isFind ? window.FindViewModel : window.ReferencesViewModel;
     const t = VM.t;
+    /**
+     * 窗口专属的扩展（如查找窗口的查找表单），由更早加载的脚本挂到 window.ResultsPlugin。
+     * @type {{ install?: (api: any) => void, render?: () => void, localize?: () => void, onMessage?: (message: any) => boolean, onKey?: (event: KeyboardEvent) => boolean }}
+     */
+    // @ts-ignore
+    const plugin = window.ResultsPlugin || {};
 
     const ROW_HEIGHT = 22;
     const OVERSCAN = 12;
@@ -66,7 +74,7 @@
         const columns = {};
         for (const definition of VM.COLUMNS)
             columns[definition.id] = { width: definition.width, visible: definition.visible };
-        return { groupBy: 'project-definition', listView: false, scope: 'solution', columns };
+        return { groupBy: VM.GROUPINGS[0].id, listView: false, scope: VM.SCOPES[0].id, columns };
     }
 
     /** @param {any} saved */
@@ -221,6 +229,8 @@
         renderStatus();
         renderBody();
         postTitle();
+        if (plugin.render)
+            plugin.render();
     }
 
     /** 按 data-i18n* 属性填入骨架里的静态文本。 */
@@ -267,6 +277,8 @@
         closeMenu();
         applyStaticText();
         fillOptions();
+        if (plugin.localize)
+            plugin.localize();
         recompute();
         renderAll();
     }
@@ -408,7 +420,7 @@
         const classes = (ui.selected.has(row.key) ? ' selected' : '') + (ui.focusKey === row.key ? ' focused' : '');
         if (row.type === 'group')
         {
-            const icon = row.field === 'project' ? '' : `<span class="codicon codicon-${row.icon} group-icon"></span>`;
+            const icon = row.icon ? `<span class="codicon codicon-${row.icon} group-icon"></span>` : '';
             return `<tr class="row group${classes}" data-index="${index}"><td colspan="${columns.length}">` +
                 `<div class="group-cell" style="padding-left:${6 + row.level * 16}px">` +
                 `<span class="codicon codicon-chevron-${row.expanded ? 'down' : 'right'} twistie" data-twistie="1"></span>` +
@@ -420,10 +432,10 @@
         {
             if (column.id === 'code')
             {
-                const segments = VM.codeSegments(item.code, item.column, item.endColumn);
+                const parts = VM.codeParts(item).map(/** @param {{ text: string, match: boolean }} part */ part =>
+                    part.match ? `<span class="match">${escapeHtml(part.text)}</span>` : escapeHtml(part.text));
                 return `<td class="c-code${item.isDefinition ? ' definition' : ''}" title="${escapeHtml(item.code.trim())}">` +
-                    `<div class="code" style="padding-left:${itemIndent(row.level)}px">` +
-                    `${escapeHtml(segments.prefix)}<span class="match">${escapeHtml(segments.match)}</span>${escapeHtml(segments.suffix)}</div></td>`;
+                    `<div class="code" style="padding-left:${itemIndent(row.level)}px">${parts.join('')}</div></td>`;
             }
             const text = VM.columnText(item, column.id);
             const tip = column.id === 'file' ? item.relativePath : text;
@@ -1250,8 +1262,18 @@
     }
 
     /** @param {KeyboardEvent} event */
+    function letterOf(event)
+    {
+        if (event.code && /^Key[A-Z]$/.test(event.code))
+            return event.code.slice(3).toLowerCase();
+        return (event.key || '').toLowerCase();
+    }
+
+    /** @param {KeyboardEvent} event */
     function onGlobalKey(event)
     {
+        if (plugin.onKey && plugin.onKey(event))
+            return;
         if (event.key === 'Escape')
         {
             closePopup();
@@ -1260,12 +1282,14 @@
         }
         if (event.altKey && !event.ctrlKey && !event.metaKey)
         {
-            if (event.key === 'k' || event.key === 'K')
+            // macOS 上 Alt 会改变 key（如 Alt+K 得到 ˚），优先按物理键位判断
+            const letter = letterOf(event);
+            if (letter === 'k')
             {
                 event.preventDefault();
                 toggleKeep();
             }
-            else if (event.key === 'l' || event.key === 'L')
+            else if (letter === 'l')
             {
                 event.preventDefault();
                 toggleListView();
@@ -1284,6 +1308,8 @@
     /** @param {any} message */
     function onMessage(message)
     {
+        if (plugin.onMessage && plugin.onMessage(message))
+            return;
         switch (message.type)
         {
             case 'init':
@@ -1292,6 +1318,8 @@
                     VM.setLocale(message.locale);
                     applyStaticText();
                     fillOptions();
+                    if (plugin.localize)
+                        plugin.localize();
                 }
                 state.settings = mergeSettings(message.settings);
                 state.results = (message.results || []).map(attach);
@@ -1322,6 +1350,8 @@
                 state.loading = message.text;
                 renderStatus();
                 renderEmpty();
+                if (plugin.render)
+                    plugin.render();
                 break;
             case 'context':
             {
@@ -1345,8 +1375,25 @@
     }
 
     VM.setLocale(document.body.getAttribute('data-locale') || VM.getLocale());
+    if (plugin.install)
+    {
+        plugin.install({
+            vscode,
+            VM,
+            t,
+            state,
+            dom,
+            activeResult,
+            escapeHtml,
+            renderAll,
+            focusTable: () => dom.scroller.focus({ preventScroll: true }),
+            letterOf,
+        });
+    }
     applyStaticText();
     fillOptions();
+    if (plugin.localize)
+        plugin.localize();
     bindEvents();
     vscode.postMessage({ type: 'ready' });
     renderAll();

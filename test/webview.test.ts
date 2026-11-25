@@ -22,6 +22,7 @@ function boot()
         }
     };
     window.eval(fs.readFileSync(path.join(media, 'i18n.js'), 'utf8'));
+    window.eval(fs.readFileSync(path.join(media, 'listModel.js'), 'utf8'));
     window.eval(fs.readFileSync(path.join(media, 'viewModel.js'), 'utf8'));
     window.eval(fs.readFileSync(path.join(media, 'main.js'), 'utf8'));
     const document = window.document as Document;
