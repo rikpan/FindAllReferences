@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { collectReferences } from './collector';
 import { FindOptions, normalizeFindOptions } from './core/search';
 import { t } from './i18n';
-import { ProjectResolver, RepositoryResolver } from './resolvers';
+import { ProjectResolver, RepositoryResolver, SolutionResolver } from './resolvers';
 import { ResultsViewProvider } from './resultsView';
 import { FindQueryError, findInFiles } from './textSearch';
 import { bodyMarkup, findBodyMarkup } from './webviewMarkup';
@@ -35,6 +35,7 @@ export function activate(context: vscode.ExtensionContext): void
 {
     const projects = new ProjectResolver();
     const repositories = new RepositoryResolver();
+    const solutions = new SolutionResolver();
     void repositories.initialize();
 
     // ---------- 查找所有引用 ----------
@@ -72,9 +73,14 @@ export function activate(context: vscode.ExtensionContext): void
         {
             const collected = await vscode.window.withProgress(
                 { location: { viewId: references.currentViewId() } },
-                () => collectReferences(targetUri, targetPosition, projects, repositories, source.token));
+                () => collectReferences(targetUri, targetPosition, projects, repositories, solutions, source.token));
             if (collected && !source.token.isCancellationRequested)
-                references.showResult({ ...collected });
+            {
+                const { textFallback, ...result } = collected;
+                references.showResult(result);
+                if (textFallback)
+                    vscode.window.setStatusBarMessage(t('message.textFallback'), 8000);
+            }
         }
         catch (error)
         {
@@ -197,6 +203,7 @@ export function activate(context: vscode.ExtensionContext): void
     context.subscriptions.push(
         projects,
         repositories,
+        solutions,
         references,
         find,
         ...register(references),

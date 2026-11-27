@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { normalizeFilePath, ProjectIndex } from './core/projects';
+import { parseSolutionProjects } from './core/solution';
 import { strings } from './i18n';
 
 /** 特殊项目名按 ID 存储，Webview 显示时翻译为「杂项文件」「外部文件」。 */
@@ -130,6 +131,120 @@ export class ProjectResolver implements vscode.Disposable
         }
         this.markerCache.set(directory, name);
         return name;
+    }
+}
+
+/**
+ * C# 语言服务只为已加载的解决方案提供跨文件引用。这里推断加载的是哪个解决方案，
+ * 用来判断文件是否在其中：取 dotnet.defaultSolution／omnisharp.defaultLaunchSolution 设置，
+ * 未设置时工作区里只有一个解决方案就是它；有多个又没设置时无法判断。
+ */
+export class SolutionResolver implements vscode.Disposable
+{
+    private index: Promise<ProjectIndex | undefined> | undefined;
+    private readonly disposables: vscode.Disposable[] = [];
+
+    constructor()
+    {
+        const reset = () =>
+        {
+            this.index = undefined;
+        };
+        for (const glob of ['**/*.{sln,slnx}', projectGlob])
+        {
+            const watcher = vscode.workspace.createFileSystemWatcher(glob);
+            watcher.onDidCreate(reset);
+            watcher.onDidChange(reset);
+            watcher.onDidDelete(reset);
+            this.disposables.push(watcher);
+        }
+        this.disposables.push(vscode.workspace.onDidChangeConfiguration(event =>
+        {
+            if (event.affectsConfiguration('dotnet.defaultSolution') || event.affectsConfiguration('omnisharp.defaultLaunchSolution'))
+                reset();
+        }));
+        this.disposables.push(vscode.workspace.onDidChangeWorkspaceFolders(reset));
+    }
+
+    dispose(): void
+    {
+        for (const disposable of this.disposables)
+            disposable.dispose();
+    }
+
+    /** true：文件不在已加载的解决方案里；false：在；undefined：无法判断。 */
+    async isOutside(uri: vscode.Uri): Promise<boolean | undefined>
+    {
+        if (uri.scheme !== 'file')
+            return undefined;
+        if (!this.index)
+            this.index = this.build();
+        const index = await this.index;
+        if (!index)
+            return undefined;
+        return index.resolve(uri.fsPath) === undefined;
+    }
+
+    private async build(): Promise<ProjectIndex | undefined>
+    {
+        const solutions = await this.loadedSolutions();
+        if (solutions.length === 0)
+            return undefined;
+        const decoder = new TextDecoder('utf-8');
+        const read = async (file: string) => decoder.decode(await vscode.workspace.fs.readFile(vscode.Uri.file(file)));
+        const index = new ProjectIndex();
+        for (const solution of solutions)
+        {
+            let projects: string[];
+            try
+            {
+                projects = parseSolutionProjects(solution, await read(solution));
+            }
+            catch (error)
+            {
+                console.warn(`[find-all-references] 读取解决方案失败：${solution}`, error);
+                return undefined;
+            }
+            for (const project of projects)
+            {
+                try
+                {
+                    index.add(project, await read(project));
+                }
+                catch
+                {
+                    // 解决方案里列出但不存在的工程跳过
+                }
+            }
+        }
+        return index.size > 0 ? index : undefined;
+    }
+
+    private async loadedSolutions(): Promise<string[]>
+    {
+        const configured: string[] = [];
+        for (const folder of vscode.workspace.workspaceFolders ?? [])
+        {
+            if (folder.uri.scheme !== 'file')
+                continue;
+            const config = vscode.workspace.getConfiguration(undefined, folder.uri);
+            for (const key of ['dotnet.defaultSolution', 'omnisharp.defaultLaunchSolution'])
+            {
+                const value = config.get<string>(key)?.trim();
+                if (!value || value === 'disable')
+                    continue;
+                const resolved = path.resolve(folder.uri.fsPath, value);
+                if (/\.slnx?$/i.test(resolved) && fs.existsSync(resolved))
+                {
+                    configured.push(resolved);
+                    break;
+                }
+            }
+        }
+        if (configured.length > 0)
+            return [...new Set(configured)];
+        const found = await vscode.workspace.findFiles('**/*.{sln,slnx}', projectExclude, 2);
+        return found.length === 1 ? [found[0].fsPath] : [];
     }
 }
 

@@ -5,7 +5,9 @@ import * as vscode from 'vscode';
 import { classifyReference, HighlightKind } from './core/classify';
 import { DefinitionInfo, ReferenceItem } from './core/model';
 import { classOfKind, containersAt, definitionLabelAt, iconForKind, SymbolClass, SymbolNode } from './core/symbols';
-import { fileKeyOf, ProjectResolver, RepositoryResolver } from './resolvers';
+import { defaultFindOptions } from './core/search';
+import { fileKeyOf, ProjectResolver, RepositoryResolver, SolutionResolver } from './resolvers';
+import { findInFiles } from './textSearch';
 
 export interface CollectedReferences
 {
@@ -14,6 +16,8 @@ export interface CollectedReferences
     originFileKey: string;
     originProject: string;
     items: Omit<ReferenceItem, 'id'>[];
+    /** 当前文件不在已加载的解决方案里，跨文件的结果改用全词文本匹配补齐。 */
+    textFallback: boolean;
 }
 
 const fileConcurrency = 8;
@@ -65,6 +69,57 @@ function sameStart(a: vscode.Location, b: vscode.Location): boolean
     return a.uri.toString() === b.uri.toString() && a.range.start.isEqual(b.range.start);
 }
 
+const solutionLanguages = /\.(cs|vb|fs)$/i;
+
+/**
+ * C# 等语言服务只认已加载解决方案里的文件；当前文件不在其中时，它只能找到本文件内的引用。
+ * 能确定加载的解决方案时按是否包含判断；确定不了时（多个解决方案又没设置默认的），结果全在本文件里就兜底。
+ */
+async function needsTextFallback(
+    uri: vscode.Uri,
+    word: string,
+    locations: vscode.Location[],
+    solutions: SolutionResolver): Promise<boolean>
+{
+    if (!word || uri.scheme !== 'file' || !solutionLanguages.test(uri.fsPath))
+        return false;
+    const outside = await solutions.isOutside(uri);
+    if (outside !== undefined)
+        return outside;
+    const origin = uri.toString();
+    return locations.every(location => location.uri.toString() === origin);
+}
+
+/** 在工作区里按全词查找同类源文件，返回语言服务没给出的位置。 */
+async function textReferences(
+    uri: vscode.Uri,
+    word: string,
+    known: vscode.Location[],
+    projects: ProjectResolver,
+    token: vscode.CancellationToken): Promise<vscode.Location[]>
+{
+    const extension = path.extname(uri.fsPath).slice(1).toLowerCase();
+    const found = await findInFiles({
+        ...defaultFindOptions,
+        query: word,
+        matchCase: extension !== 'vb',
+        wholeWord: true,
+        include: `*.${extension}`,
+    }, uri, projects, token, () => undefined);
+    const result: vscode.Location[] = [];
+    for (const item of found.items)
+    {
+        const file = vscode.Uri.parse(item.uri);
+        for (const [start, end] of item.matches)
+        {
+            const location = new vscode.Location(file, new vscode.Range(item.line, start, item.line, end));
+            if (!known.some(existing => sameStart(existing, location)) && !result.some(existing => sameStart(existing, location)))
+                result.push(location);
+        }
+    }
+    return result;
+}
+
 async function forEachLimited<T>(values: T[], limit: number, token: vscode.CancellationToken, action: (value: T) => Promise<void>): Promise<void>
 {
     let next = 0;
@@ -81,6 +136,7 @@ export async function collectReferences(
     position: vscode.Position,
     projects: ProjectResolver,
     repositories: RepositoryResolver,
+    solutions: SolutionResolver,
     token: vscode.CancellationToken): Promise<CollectedReferences | undefined>
 {
     const origin = await vscode.workspace.openTextDocument(uri);
@@ -112,6 +168,21 @@ export async function collectReferences(
     {
         if (location.uri.scheme === 'file' && !locations.some(existing => sameStart(existing, location)))
             locations.push(location);
+    }
+
+    const textFallback = await needsTextFallback(uri, word, locations, solutions);
+    if (textFallback)
+    {
+        try
+        {
+            locations.push(...await textReferences(uri, word, locations, projects, token));
+        }
+        catch (error)
+        {
+            console.warn('[find-all-references] 文本匹配兜底失败。', error);
+        }
+        if (token.isCancellationRequested)
+            return undefined;
     }
 
     const byFile = new Map<string, { uri: vscode.Uri; locations: vscode.Location[] }>();
@@ -192,5 +263,6 @@ export async function collectReferences(
         originFileKey: fileKeyOf(uri),
         originProject: await projects.resolve(uri),
         items,
+        textFallback,
     };
 }

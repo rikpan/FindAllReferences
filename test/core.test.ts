@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { test } from 'node:test';
 import { classifyReference, isInTypeArgumentList, Kind } from '../src/core/classify';
 import { ProjectIndex, parseProjectFile } from '../src/core/projects';
+import { parseSolutionProjects } from '../src/core/solution';
 import { containersAt, definitionLabelAt, SymbolKind, SymbolNode } from '../src/core/symbols';
 
 function classify(line: string, word: string, symbolClass: 'type' | 'value' | 'method' | 'unknown', occurrence = 0, highlight?: 0 | 1 | 2): string
@@ -159,4 +160,27 @@ test('Compile 项的通配与多值', () =>
     const info = parseProjectFile('<Compile Include="A.cs;B.cs" /><Compile Include="**/*.cs" />');
     assert.deepEqual(info.compileIncludes, ['A.cs', 'B.cs']);
     assert.equal(info.usesGlobs, true);
+});
+
+test('解决方案：.sln 与 .slnx 里列出的工程', () =>
+{
+    const root = path.resolve('/repo');
+    const sln = [
+        'Microsoft Visual Studio Solution File, Format Version 12.00',
+        'Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game", "Game\\Game.csproj", "{11111111-1111-1111-1111-111111111111}"',
+        'EndProject',
+        'Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{22222222-2222-2222-2222-222222222222}"',
+        'EndProject',
+        'Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tools", "..\\Tools\\Tools.csproj", "{33333333-3333-3333-3333-333333333333}"',
+        'EndProject',
+    ].join('\r\n');
+    assert.deepEqual(parseSolutionProjects(path.join(root, 'Game.sln'), sln), [
+        path.join(root, 'Game', 'Game.csproj'),
+        path.resolve(root, '..', 'Tools', 'Tools.csproj'),
+    ]);
+    const slnx = '<Solution>\n  <Folder Name="/src/">\n    <Project Path="src/App/App.csproj" />\n  </Folder>\n  <Project Path="Lib.fsproj" Type="Classic F#" />\n</Solution>';
+    assert.deepEqual(parseSolutionProjects(path.join(root, 'App.slnx'), slnx), [
+        path.join(root, 'src', 'App', 'App.csproj'),
+        path.join(root, 'Lib.fsproj'),
+    ]);
 });
